@@ -1,0 +1,6 @@
+backend/.env
+frontend/node_modules
+backend/db.sqlite3
+backend/*.log
+backend/celerybeat-schedule
+backend/supervisord.pid
