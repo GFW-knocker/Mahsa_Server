@@ -10,6 +10,7 @@ TBD
 ## How to check
 * http://localhost (nginx/frontend)
 * http://localhost/backend/app/ (django)
+* http://localhost/backend/admin/ (django admin)
 * http://localhost:9001 (backend supervisord interface)
 * http://localhost:6001 (flower - celery task monitoring)
 
@@ -26,13 +27,26 @@ cd backend
 virtualenv .env --python=python3.8
 source .env/bin/activate
 pip3 install -r requirements.txt
-export DJANGO_SETTINGS_MODULE=mahsa.settings.local
 ```
 #### Django
 ```
 ./manage.py migrate
 ./manage.py runserver 0.0.0.0:8000
+./manage.py createsuperuser  # create a django superuser (for admin login)
 ```
+#### Endpoints
+* Config
+  
+  ```
+  [POST] /backend/app/config/
+  [GET] /backend/app/config/<uuid>/
+  [GET] /backend/app/config/stats/
+  ```
+* Report
+  ```
+  [POST] /backend/app/report/
+  ```
+
 #### Celery
 * Worker
   ```

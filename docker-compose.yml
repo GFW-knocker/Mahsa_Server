@@ -8,7 +8,6 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=mahsa.settings.docker-compose
     ports:
-      - "8000:8000"
       - "9001:9001"
       - "5555:5555"
     depends_on:

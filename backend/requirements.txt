@@ -1,6 +1,8 @@
 asgiref==3.7.2
 backports.zoneinfo==0.2.1
 Django==4.2.3
+djangorestframework==3.14.0
+uuid==1.30
 sqlparse==0.4.4
 typing-extensions==4.7.1
 celery==5.3.1

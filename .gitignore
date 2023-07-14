@@ -3,4 +3,5 @@ node_modules
 *.log
 celerybeat-schedule
 db.sqlite3
+db.*
 supervisord.pid
