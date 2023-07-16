@@ -1,3 +1,4 @@
+from captcha.models import CaptchaStore
 from django.db.models import Avg
 from rest_framework import serializers
 from .models import Config, Report
@@ -25,10 +26,14 @@ class DetailConfigSerializer(serializers.ModelSerializer):
 
 
 class CreateConfigSerializer(serializers.ModelSerializer):
+    captcha = serializers.CharField(write_only=True)
+    captcha_key = serializers.CharField(write_only=True)
+
     class Meta:
         model = Config
         fields = ['url', 'ads_url', 'expired_at', 'protocol',
-                  'use_fragment', 'num_fragment', 'use_cdn', 'use_random_subdomain']
+                  'use_fragment', 'num_fragment', 'use_cdn', 'use_random_subdomain',
+                  'captcha', 'captcha_key']
 
     def validate_url(self, value):
         if False:
@@ -47,6 +52,16 @@ class CreateConfigSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         # validate non-field form logic
+        # validate captcha
+        try:
+            stored_captcha = CaptchaStore.objects.get(hashkey=data['captcha_key'])
+            if stored_captcha.challenge.lower() != data['captcha'].lower():
+                raise serializers.ValidationError("Captcha is not valid!")
+        except CaptchaStore.DoesNotExist:
+            raise serializers.ValidationError("Captcha is not valid!")
+        stored_captcha.delete()  # delete the used captcha
+
+        # make sure a config with this hash is not existed already.
         try:
             Config.objects.get(hash=calculate_md5(data['url']))
             raise serializers.ValidationError("Config with this URL is already existed!")
@@ -57,6 +72,8 @@ class CreateConfigSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Call the parent create() method to save the instance
         validated_data['hash'] = calculate_md5(validated_data['url'])
+        del validated_data['captcha']
+        del validated_data['captcha_key']
         instance = super().create(validated_data)
 
         return instance
