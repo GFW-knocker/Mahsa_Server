@@ -3,3 +3,4 @@ db.sqlite3
 *.log
 celerybeat-schedule
 supervisord.pid
+__pycache__

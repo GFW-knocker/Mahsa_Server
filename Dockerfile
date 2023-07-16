@@ -11,7 +11,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 COPY backend .
 
 # Collect static files
-RUN python manage.py collectstatic --noinput
+RUN DJANGO_SETTINGS_MODULE=mahsa.settings.local python ./manage.py collectstatic --noinput
 
 # Stage 2: Build Vue.js app and copy dist files to Nginx
 FROM node:18 AS vue-build
@@ -35,7 +35,7 @@ RUN npm run build
 FROM nginx:1.21
 
 # Copy static files from Django
-COPY --from=django-static /app/staticfiles/ /var/www/static/
+COPY --from=django-static /app/mahsa/staticfiles/ /var/www/static/
 
 # Copy built dist files from Vue.js
 COPY --from=vue-build /app/dist/ /var/www/html/
