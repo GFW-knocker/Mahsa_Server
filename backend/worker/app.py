@@ -14,8 +14,12 @@ app.conf.broker_url = f'redis://{settings.REDIS_HOST}:6379/0'
 app.conf.result_backend = app.conf.broker_url
 
 app.conf.beat_schedule = {
-    'run-every-hour': {
+    'check-configs-every-hour': {
         'task': 'worker.tasks.check_configs',
+        'schedule': crontab(hour='*/1')
+    },
+    'delete-expired-captcha': {
+        'task': 'worker.tasks.delete_expired_captcha_objects',
         'schedule': crontab(hour='*/1')
     },
 }

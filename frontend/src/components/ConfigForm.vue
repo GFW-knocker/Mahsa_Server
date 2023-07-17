@@ -72,6 +72,14 @@
         </label>
       </div>
 
+      <div v-if="captchaImageUrl" class="mb-4">
+        <label class="relative">
+          <img class="mb-4" :src="captchaImageUrl" />
+          <input type="text" placeholder="Captcha" id="captcha" v-model="form.captcha" required
+          class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+        </label>
+      </div>
+
       <ul class="mt-4 mb-4" v-if="errors.non_field_errors">
         <li class="text-red-500 mt-1" v-for="item in errors.non_field_errors">{{ item }}</li>
       </ul>
@@ -104,8 +112,9 @@ const csrftoken = document.cookie
 
 // Set the CSRF token as a default header for all Axios requests
 axios.defaults.headers.common['X-CSRFToken'] = csrftoken;
+axios.defaults.headers.common['x-requested-with'] = 'XMLHttpRequest';
 
-interface Config {
+interface ConfigForm {
   protocol: string;
   url: number;
   ads_url: number;
@@ -113,7 +122,9 @@ interface Config {
   use_fragment: boolean,
   use_cdn: boolean,
   use_random_subdomain: boolean,
-  num_fragment: number
+  num_fragment: number,
+  captcha: string,
+  captcha_key: string
 }
 
 export default {
@@ -124,12 +135,14 @@ export default {
         url: '',
         ads_url: '',
         expired_at: '',
-        num_fragment: 10
-      } as Config,
+        num_fragment: 10,
+        captcha: ''
+      } as ConfigForm,
       errors: {},
       successMessage: '',
       submitted: false,
-      createdUUID: ''
+      createdUUID: '',
+      captchaImageUrl: null
     };
   },
   computed: {
@@ -144,9 +157,23 @@ export default {
       day = day < 10 ? `0${day}` : day;
 
       return `${year}-${month}-${day}`;
-    },
+    }
+  },
+  mounted() {
+    this.getCaptcha();
   },
   methods: {
+    async getCaptcha() {
+      try {
+        const response = await axios.get(`/backend/captcha/refresh/`);
+        this.captchaImageUrl = response.data['image_url'];
+        this.form.captcha_key = response.data['key'];
+      } catch (error) {
+        this.errorMessage = error.message;
+        this.error = true;
+        console.error(error);
+      }
+    },
     async handleSubmit() {
       this.errors = {};
 
