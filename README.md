@@ -1,11 +1,12 @@
 # Mahsa Server
 
 ## What is Mahsa Server?
-TBD
+Mahsa Service is a web based application that enables VPN configs providers to submit their configs to be used in the 
+MahsaNG app.
 
 ## How to run
 1. install docker and docker-compose
-2. `docker-compose up -d`
+2. run `docker-compose up -d`
 
 ## How to check
 * http://localhost (nginx/frontend)
@@ -38,13 +39,14 @@ pip3 install -r requirements.txt
 * Config
   
   ```
-  [POST] /backend/app/config/
-  [GET] /backend/app/config/<uuid>/
-  [GET] /backend/app/config/stats/
+  [POST] /backend/app/config/        # add new config
+  [GET] /backend/app/config/<uuid>/  # retrieve created config
+  [GET] /backend/app/config/stats/   # configs stats
+  [GET] /backend/app/config/hit_me/  # draw 2 new configs
   ```
 * Report
   ```
-  [POST] /backend/app/report/
+  [POST] /backend/app/report/        # add a single report
   ```
 
 #### Celery

@@ -22,7 +22,7 @@
         </ul>
       </div>
       <div class="mb-4">
-        <label for="url" class="block text-gray-700 font-medium">ADS URL</label>
+        <label for="url" class="block text-gray-700 font-medium">Ads URL</label>
         <input type="text" id="ads" v-model="form.ads_url" required
           class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
         <ul v-if="errors.ads_url">
