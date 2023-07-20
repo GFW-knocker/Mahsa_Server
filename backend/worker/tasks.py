@@ -1,33 +1,52 @@
+import os
+import random
 from datetime import datetime
-from celery import shared_task
+import requests
+from celery import group
 from captcha.models import CaptchaStore
 from celery.utils.log import get_task_logger
+from django.conf import settings
+from pytz import UTC
+
 from app.models import Config
+from utils import text_xray
+from worker.app import celery_app
 
 logger = get_task_logger(__name__)
 
 
-def xray_config(config):
-    # run xray
-    # calculate a simple score between 0 and 1 based on download/upload speed and other factors
-    score = 1  # score=0 means xray test failed!
-    return score
+@celery_app.task
+def run_xray_test(uuid):
+    config = Config.objects.get(uuid=uuid)
+    result = None
+    success = False
+    try:
+        success, result = text_xray(config.url)
+    except ConnectionError as e:
+        logger.error(f"Connection error: {e}")
+
+    logger.info(f"result: {result}")
+    config.xray_result = result
+    config.last_xray_run = datetime.now(tz=UTC)
+    config.save()
+
+    return result  # can check this result in flower
 
 
-@shared_task
+@celery_app.task
 def check_configs():
-    logger.info("start testing all configs with xray")
+    # worker_number = celery_app.control.inspect().stats()
+    pid = os.getpid()
+    logger.info(f"start testing all configs with xray - {pid}")
+    tasks = []
     for config in Config.objects.all():
-        logger.info(f"testing {config.url} with xray")
-        score = xray_config(config)
-        logger.info(f"score: {score}")
-        config.xray_score = score
-        config.last_tested_at = datetime.now()
-        config.save()
-    logger.info("all done.")
+        logger.info(f"run xray on config {config.uuid} - {config.url}")
+        tasks.append(run_xray_test.si(str(config.uuid)))
+    group(tasks).apply_async()
+    logger.info(f"{len(tasks)} tasks created!")
 
 
-@shared_task
+@celery_app.task
 def delete_expired_captcha_objects():
     # delete expired captcha store objects
     CaptchaStore.remove_expired()

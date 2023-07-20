@@ -1,10 +1,15 @@
+import logging
+
+from django.db.models.expressions import RawSQL
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from .models import Config, Report
-from .serializers import CreateConfigSerializer, DetailConfigSerializer, CreateReportSerializer, HitMeConfigSerializer
+from .serializers import CreateConfigSerializer, RetrieveConfigSerializer, CreateReportSerializer, HitMeConfigSerializer
 from .utils import get_client_ip
+
+logger = logging.getLogger(__name__)
 
 
 class ConfigViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
@@ -14,7 +19,7 @@ class ConfigViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, GenericV
         if self.action == 'create':
             return CreateConfigSerializer
         elif self.action == 'retrieve':
-            return DetailConfigSerializer
+            return RetrieveConfigSerializer
         elif self.action == 'hit_me':
             return HitMeConfigSerializer
 
@@ -31,11 +36,11 @@ class ConfigViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, GenericV
 
     @action(detail=False, methods=['GET'])
     def hit_me(self, request, *args, **kwargs):
-        # find the best 2 configs
         ip_observed, ip_client = get_client_ip(request)
         # ...add logic of dynamic scoring here...
-        # order by best xray_score and least number of times consumed (previously offered) - limit 2
-        configs = Config.objects.all().order_by('-xray_score', 'num_consumed')[:2]
+        # order by best xray_result and least number of times consumed (previously offered) - limit 2
+        configs = Config.objects.filter(xray_result__successful=True) \
+                      .order_by("xray_result__avg_latency", 'num_consumed')[:2]
         serializer = self.get_serializer(configs, many=True)
         return Response(serializer.data)
 

@@ -1,6 +1,9 @@
 import hashlib
 import re
 
+from app.models import PROTOCOL_VMESS, PROTOCOL_VLESS, PROTOCOL_TROJAN, PROTOCOL_SOCKS, PROTOCOL_SHADOWSOCKS, \
+    PROTOCOL_WIREGUARD
+
 
 def validate_ip_address(ip_address):
     # Regular expressions for IPv6 and IPv4 patterns
@@ -31,3 +34,20 @@ def get_client_ip(request):
         ip_client = ip_observed
 
     return ip_observed, ip_client
+
+
+def get_protocol(url):
+    if url.startswith("vmess://"):
+        return PROTOCOL_VMESS
+    elif url.startswith("vless://"):
+        return PROTOCOL_VLESS
+    elif url.startswith("trojan://"):
+        return PROTOCOL_TROJAN
+    elif url.startswith("wireguard://"):
+        return PROTOCOL_WIREGUARD
+    elif url.startswith("ss://"):
+        return PROTOCOL_SHADOWSOCKS
+    elif url.startswith("socks://"):
+        return PROTOCOL_SOCKS
+    else:
+        return None

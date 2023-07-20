@@ -1,0 +1,4 @@
+Flask==2.3.2
+requests==2.31.0
+PySocks==1.7.1
+gunicorn==20.1.0

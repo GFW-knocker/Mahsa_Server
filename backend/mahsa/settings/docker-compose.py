@@ -1,6 +1,7 @@
 from .base import *
 
 REDIS_HOST = "redis"
+XRAY_HOST = "xray"
 
 DEBUG = False
 

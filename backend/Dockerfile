@@ -1,5 +1,21 @@
+# base image to build a JRE
+FROM amazoncorretto:17.0.3-alpine as corretto-jdk
+
+# required for strip-debug to work
+RUN apk add --no-cache binutils
+
+# Build small JRE image
+RUN $JAVA_HOME/bin/jlink \
+         --verbose \
+         --add-modules ALL-MODULE-PATH \
+         --strip-debug \
+         --no-man-pages \
+         --no-header-files \
+         --compress=2 \
+         --output /customjre
+
 # Base image
-FROM python:3.8
+FROM python:3.9-alpine3.18
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -9,7 +25,7 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /app
 
 # Install supervisord
-RUN apt-get update && apt-get install -y supervisor
+RUN apk add supervisor
 
 # Install dependencies
 COPY requirements.txt .
@@ -26,5 +42,12 @@ EXPOSE 8000
 # export supervisord interface port
 EXPOSE 9001
 
+# config jre
+ENV JAVA_HOME=/jre
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+
+# copy JRE from the base image
+COPY --from=corretto-jdk /customjre $JAVA_HOME
+
 # Start supervisord as the entrypoint
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["sh", "/app/entrypoint.sh"]
