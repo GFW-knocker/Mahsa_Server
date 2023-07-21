@@ -28,19 +28,21 @@ ENV PYTHONUNBUFFERED 1
 # Set the working directory
 WORKDIR /app
 
+# Install supervisord
+RUN apk add supervisor
+
 # Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the Django project files
-COPY . /app
-
 # copy JRE from the base image
 COPY --from=corretto-jdk /customjre $JAVA_HOME
 
-
 # Expose flask webserver port
 EXPOSE 8001
+
+# Copy the Django project files
+COPY . /app
 
 # Start supervisord as the entrypoint
 ENTRYPOINT ["sh", "/app/entrypoint.sh"]

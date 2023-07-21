@@ -1,6 +1,4 @@
 import logging
-
-from django.db.models.expressions import RawSQL
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -52,6 +50,10 @@ class ConfigViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, GenericV
             'total_configs': total_configs,
             'total_reports': total_reports
         })
+
+    @action(detail=False, methods=['GET'])
+    def ip(self, request):
+        return Response(get_client_ip(request), status=status.HTTP_200_OK)
 
 
 class ReportViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, GenericViewSet):

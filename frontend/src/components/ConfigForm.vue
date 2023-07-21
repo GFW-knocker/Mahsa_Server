@@ -72,6 +72,11 @@
       <ul class="mt-4 mb-4" v-if="errors.non_field_errors">
         <li class="bg-red-500 p-2 text-white mt-1 rounded-md" v-for="item in errors.non_field_errors">{{ item }}</li>
       </ul>
+      <ul class="mt-4 mb-4" v-if="errors.message">
+        <li class="bg-red-500 p-2 text-white mt-1 rounded-md">
+          {{ errors.message }}
+        </li>
+      </ul>
 
       <div v-if="isLoading" class="text-center mb-3">
           <div role="status">
@@ -110,15 +115,16 @@
 <script lang="ts">
 import axios from 'axios';
 
-// Get the CSRF token from the cookie
-const csrftoken = document.cookie
-  .split('; ')
-  .find(cookie => cookie.startsWith('csrftoken='))
-  .split('=')[1];
+try {
+  // Get the CSRF token from the cookie
+  const csrftoken = document.cookie
+    .split('; ')
+    .find(cookie => cookie.startsWith('csrftoken='))
+    .split('=')[1];
 
-// Set the CSRF token as a default header for all Axios requests
-axios.defaults.headers.common['X-CSRFToken'] = csrftoken;
-axios.defaults.headers.common['x-requested-with'] = 'XMLHttpRequest';
+  // Set the CSRF token as a default header for all Axios requests
+  axios.defaults.headers.common['X-CSRFToken'] = csrftoken;
+} catch (e) {}
 
 interface ConfigForm {
   protocol: string;
@@ -208,8 +214,7 @@ export default {
           if (error.response && error.response.status === 400) {
             this.errors = error.response.data;
           } else {
-            console.error(error);
-            // Handle other types of errors
+            this.errors['message'] = error.message;
           }
         }
       }

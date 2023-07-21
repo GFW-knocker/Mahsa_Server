@@ -1,5 +1,9 @@
+import datetime
 import logging
+
+from captcha.models import CaptchaStore
 from django.db.models import Avg
+from pytz import UTC
 from rest_framework import serializers
 from utils import text_xray
 from .models import Config, Report
@@ -62,13 +66,13 @@ class CreateConfigSerializer(serializers.ModelSerializer):
     def validate(self, data):
         # validate non-field form logic
         # validate captcha
-        # try:
-        #     stored_captcha = CaptchaStore.objects.get(hashkey=data['captcha_key'])
-        #     if stored_captcha.challenge.lower() != data['captcha'].lower():
-        #         raise serializers.ValidationError("Captcha is not valid!")
-        # except CaptchaStore.DoesNotExist:
-        #     raise serializers.ValidationError("Captcha is not valid!")
-        # stored_captcha.delete()  # delete the used captcha
+        try:
+            stored_captcha = CaptchaStore.objects.get(hashkey=data['captcha_key'])
+            if stored_captcha.challenge.lower() != data['captcha'].lower():
+                raise serializers.ValidationError("Captcha is not valid!")
+        except CaptchaStore.DoesNotExist:
+            raise serializers.ValidationError("Captcha is not valid!")
+        stored_captcha.delete()  # delete the used captcha
 
         # make sure a config with this hash is not existed already.
         try:
@@ -79,6 +83,8 @@ class CreateConfigSerializer(serializers.ModelSerializer):
 
         # test the config link with XRay
         success, result = text_xray(data['url'])
+        data['xray_result'] = result
+        data['last_xray_run'] = datetime.datetime.now(tz=UTC)
         if not success:
             logger.error(f"xray failed - {result}")
             raise serializers.ValidationError(

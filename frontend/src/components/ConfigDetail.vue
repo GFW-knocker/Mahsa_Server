@@ -19,8 +19,15 @@
       </div>
       <div class="mb-4">
         <label class="block text-gray-700 font-bold mb-2">Config Link/URL</label>
-        <code class="text-sm text-gray-800" style="overflow-wrap: break-word;">
-          {{ config.url }}
+        <code class="text-sm text-gray-800" style="overflow-wrap: break-word">
+          <div class="group inline-block">
+            <span class="blur group-hover:hidden" style="overflow-wrap: break-word">
+              {{ config.url }}
+            </span>
+            <span class="hidden group-hover:inline-block" style="overflow-wrap: break-word">
+              {{ config.url }}
+            </span>
+          </div>
         </code>
       </div>
       <div class="mb-4">
@@ -57,15 +64,6 @@
 
 <script lang="ts">
 import axios from 'axios';
-
-// Get the CSRF token from the cookie
-const csrftoken = document.cookie
-  .split('; ')
-  .find(cookie => cookie.startsWith('csrftoken='))
-  .split('=')[1];
-
-// Set the CSRF token as a default header for all Axios requests
-axios.defaults.headers.common['X-CSRFToken'] = csrftoken;
 
 interface Config {
   uuid: string,

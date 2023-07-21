@@ -16,11 +16,11 @@ celery_app.conf.result_backend = celery_app.conf.broker_url
 celery_app.conf.beat_schedule = {
     'check-configs-every-hour': {
         'task': 'worker.tasks.check_configs',
-        'schedule': crontab(hour='*/1')
+        'schedule': crontab(minute='0')
     },
     'delete-expired-captcha': {
         'task': 'worker.tasks.delete_expired_captcha_objects',
-        'schedule': crontab(hour='*/1')
+        'schedule': crontab(minute='0')
     },
 }
 

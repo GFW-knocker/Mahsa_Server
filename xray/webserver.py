@@ -27,7 +27,7 @@ def run_test():
 
     try:
         # run the test
-        is_test_ok, avg_speed, avg_latency = do_test(url, outbound_port)
+        is_test_ok, avg_speed, avg_latency, ip_result = do_test(url, outbound_port)
     except Exception as e:
         print(f"XRay Test failed: {str(e)}")
         return jsonify({"error": str(e)}), 400
@@ -37,6 +37,7 @@ def run_test():
         'successful': is_test_ok,
         'avg_speed': avg_speed,
         'avg_latency': avg_latency,
+        'server_ip': ip_result,
     })
 
 

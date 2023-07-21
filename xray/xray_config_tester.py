@@ -41,6 +41,7 @@ def start_xray_service(config_path_dir: str, binary_path: str, timeout=5) -> Tup
     try:
         wait_for_port(host=proxy_listen, port=proxy_port, timeout=timeout)
     except Exception as e:
+        remove_dir(config_path_dir)
         proxy_process.kill()
         raise TimeoutError(str(e)) from e
         # proxies = dict(http=f"socks5://{proxy_listen}:{proxy_port}",https=f"socks5://{proxy_listen}:{proxy_port}")
@@ -55,7 +56,9 @@ def download_speed_test(n_bytes: int, proxies: dict, timeout: int) -> Tuple[floa
         raise TimeoutError("No Xray service available")
 
     start_time = time.perf_counter()
-    r = requests.get(url="https://speed.cloudflare.com/__down", params={"bytes": n_bytes}, timeout=timeout,
+    r = requests.get(url="https://speed.cloudflare.com/__down",
+                     params={"bytes": n_bytes},
+                     timeout=timeout,
                      proxies=proxies)
     total_time = time.perf_counter() - start_time
     cf_time = float(r.headers.get("Server-Timing").split("=")[1]) / 1000
@@ -136,15 +139,26 @@ def do_test(config_link, outbound_port):
             process_xray.kill()
             raise Exception("download timeout exceeded? -> " + str(e))
 
-    if process_xray is not None:
+    # make a request to the website
+    url = os.environ.get('WEBSITE_URL', 'http://localhost')
+    ip_result = None
+    try:
+        r = requests.get(f"{url}/backend/app/config/ip/", proxies=proxies, timeout=5)
+        if r.status_code == 200:
+            ip_result = r.json()
+    except Exception as e:
+        remove_dir(config_path_dir)
         process_xray.kill()
+        raise Exception(f"Failed check config server ip! {str(e)}")
+
+    process_xray.kill()
 
     if count > 0:
         Ave_speed = round(Ave_speed / count, 2)
         avg_latency = round(avg_latency / count, 2)
         print(config_link[:50]+"...", " - successful", "    DL_speed =", Ave_speed, "Mbps", "    Latency =", avg_latency, "sec")
         is_test_ok = True
-        return is_test_ok, Ave_speed, avg_latency
+        return is_test_ok, Ave_speed, avg_latency, ip_result
     else:
         raise Exception("XRay test failed! count = 0")
 
