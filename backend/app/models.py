@@ -1,9 +1,20 @@
 import uuid as uuid
 from django.db import models
 
+PROTOCOL_VMESS = 'vm'
+PROTOCOL_VLESS = 'vl'
+PROTOCOL_TROJAN = 'tr'
+PROTOCOL_WIREGUARD = 'wg'
+PROTOCOL_SHADOWSOCKS = 'ss'
+PROTOCOL_SOCKS = 'sc'
+
 PROTOCOL_CHOICES = (
-    ('vm', 'VMESS'),
-    ('vl', 'VLESS'),
+    (PROTOCOL_VMESS, 'VMESS'),
+    (PROTOCOL_VLESS, 'VLESS'),
+    (PROTOCOL_TROJAN, 'Trojan'),
+    (PROTOCOL_WIREGUARD, 'Wireguard'),
+    (PROTOCOL_SHADOWSOCKS, 'ShadowSocks'),
+    (PROTOCOL_SOCKS, 'SOCKS'),
 )
 
 
@@ -15,11 +26,11 @@ class Config(models.Model):
     ads_url = models.CharField(max_length=255)
     # number of time that a config is consumed (provided as free config to app)
     num_consumed = models.PositiveIntegerField(default=0)
-    xray_score = models.FloatField(null=True)
+    xray_result = models.JSONField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     edited_at = models.DateTimeField(auto_now=True)
     expired_at = models.DateTimeField()
-    last_tested_at = models.DateTimeField(default=None, blank=True, null=True)
+    last_xray_run = models.DateTimeField(default=None, blank=True, null=True)
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     # optional fields

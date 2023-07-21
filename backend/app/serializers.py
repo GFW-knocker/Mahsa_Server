@@ -1,11 +1,18 @@
+import datetime
+import logging
+
 from captcha.models import CaptchaStore
 from django.db.models import Avg
+from pytz import UTC
 from rest_framework import serializers
+from utils import text_xray
 from .models import Config, Report
-from .utils import calculate_md5, validate_ip_address
+from .utils import calculate_md5, validate_ip_address, get_protocol
+
+logger = logging.getLogger(__name__)
 
 
-class DetailConfigSerializer(serializers.ModelSerializer):
+class RetrieveConfigSerializer(serializers.ModelSerializer):
     protocol = serializers.SerializerMethodField(read_only=True)
     reports_count = serializers.SerializerMethodField(read_only=True)
     average_users_rating = serializers.SerializerMethodField(read_only=True)
@@ -13,7 +20,7 @@ class DetailConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = Config
         fields = ['uuid', 'url', 'ads_url', 'expired_at', 'created_at', 'is_verified',
-                  'protocol', 'reports_count', 'average_users_rating']
+                  'protocol', 'xray_result', 'last_xray_run', 'reports_count', 'average_users_rating']
 
     def get_protocol(self, instance):
         return instance.get_protocol_display()
@@ -42,8 +49,8 @@ class CreateConfigSerializer(serializers.ModelSerializer):
                   'captcha', 'captcha_key']
 
     def validate_url(self, value):
-        if False:
-            raise serializers.ValidationError("URL is not valid")
+        if get_protocol(value) is None:
+            raise serializers.ValidationError("Invalid Link! Link must start with vmess:// or vless://")
         return value
 
     def validate_ads_url(self, value):
@@ -73,11 +80,23 @@ class CreateConfigSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Config with this URL is already existed!")
         except Config.DoesNotExist:
             pass
+
+        # test the config link with XRay
+        success, result = text_xray(data['url'])
+        data['xray_result'] = result
+        data['last_xray_run'] = datetime.datetime.now(tz=UTC)
+        if not success:
+            logger.error(f"xray failed - {result}")
+            raise serializers.ValidationError(
+                "Config did not pass the XRay Test! please make sure the config is working!"
+            )
+
         return data
 
     def create(self, validated_data):
         # Call the parent create() method to save the instance
         validated_data['hash'] = calculate_md5(validated_data['url'])
+        validated_data['protocol'] = get_protocol(validated_data['url'])
         del validated_data['captcha']
         del validated_data['captcha_key']
         instance = super().create(validated_data)

@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - DJANGO_SETTINGS_MODULE=mahsa.settings.docker-compose
+      - WEBSITE_URL=https://www.example.com
     ports:
       - "9001:9001"
       - "5555:5555"
@@ -14,6 +15,15 @@ services:
       - redis
     volumes:
       - "./backend/shared:/app/shared"
+
+  xray:
+    build:
+      context: xray/
+      dockerfile: Dockerfile
+    environment:
+      - WEBSITE_URL=https://www.example.com
+    ports:
+      - "8001:8001"
 
   nginx:
     build:

@@ -15,6 +15,14 @@ MahsaNG app.
 * http://localhost:9001 (backend supervisord interface)
 * http://localhost:6001 (flower - celery task monitoring)
 
+## Login - Superuser
+* http://localhost/backend/admin/
+
+## Monitoring (must be superuser)
+* http://localhost/backend/supervisor/ (backend service supervisor status)
+* http://localhostbackend/flower/ (flower - celery task monitoring)
+* http://localhost/xray/supervisor/ (xray service supervisor status)
+
 ## How to develop
 ### Frontend
 ```
@@ -25,7 +33,7 @@ npm run serve
 ### Backend
 ```
 cd backend
-virtualenv .env --python=python3.8
+virtualenv .env --python=python3.9
 source .env/bin/activate
 pip3 install -r requirements.txt
 ```
@@ -43,6 +51,7 @@ pip3 install -r requirements.txt
   [GET] /backend/app/config/<uuid>/  # retrieve created config
   [GET] /backend/app/config/stats/   # configs stats
   [GET] /backend/app/config/hit_me/  # draw 2 new configs
+  [GET] /backend/app/config/ip/      # find ip of client (we use this for finding config server ip!)
   ```
 * Report
   ```
@@ -65,11 +74,13 @@ pip3 install -r requirements.txt
 ## Docker Services
 * backend: django, celery
 * nginx: serves frontend and static files + proxy to backend service via /backend
+* xray: container that has link2json and xray installed + a flask webserver
 * redis
 
 ## Tech Stack
 * backend
-  * django
+  * django (main backend)
+  * flask (xray webserver)
   * celery (running async tasks)
   * supervisor (managing backend processes)
 * frontend
