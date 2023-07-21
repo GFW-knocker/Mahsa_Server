@@ -25,6 +25,12 @@ class DetailConfigSerializer(serializers.ModelSerializer):
         return instance.reports.aggregate(Avg('user_rating'))['user_rating__avg']
 
 
+class HitMeConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Config
+        fields = ['url', 'ads_url']
+
+
 class CreateConfigSerializer(serializers.ModelSerializer):
     captcha = serializers.CharField(write_only=True)
     captcha_key = serializers.CharField(write_only=True)

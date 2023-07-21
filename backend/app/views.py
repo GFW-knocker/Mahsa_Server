@@ -3,7 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from .models import Config, Report
-from .serializers import CreateConfigSerializer, DetailConfigSerializer, CreateReportSerializer
+from .serializers import CreateConfigSerializer, DetailConfigSerializer, CreateReportSerializer, HitMeConfigSerializer
+from .utils import get_client_ip
 
 
 class ConfigViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
@@ -14,6 +15,8 @@ class ConfigViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, GenericV
             return CreateConfigSerializer
         elif self.action == 'retrieve':
             return DetailConfigSerializer
+        elif self.action == 'hit_me':
+            return HitMeConfigSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -24,6 +27,16 @@ class ConfigViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, GenericV
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['GET'])
+    def hit_me(self, request, *args, **kwargs):
+        # find the best 2 configs
+        ip_observed, ip_client = get_client_ip(request)
+        # ...add logic of dynamic scoring here...
+        # order by best xray_score and least number of times consumed (previously offered) - limit 2
+        configs = Config.objects.all().order_by('-xray_score', 'num_consumed')[:2]
+        serializer = self.get_serializer(configs, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['GET'])

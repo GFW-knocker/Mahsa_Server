@@ -15,7 +15,19 @@ def validate_ip_address(ip_address):
     else:
         return 'Invalid'
 
+
 def calculate_md5(string):
     md5_hash = hashlib.md5()
     md5_hash.update(string.encode('utf-8'))
     return md5_hash.hexdigest()
+
+
+def get_client_ip(request):
+    ip_observed = request.META.get('REMOTE_ADDR')
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip_client = x_forwarded_for.split(',')[0]
+    else:
+        ip_client = ip_observed
+
+    return ip_observed, ip_client
